@@ -1,6 +1,6 @@
 # CF DNS Switcher
 
-⚡ A Cloudflare Worker that lets you instantly switch a domain's DNS record between preconfigured target nodes — directly from your browser, protected by Google OAuth.
+A Cloudflare Worker that lets you instantly switch a domain's DNS record between preconfigured target nodes — directly from your browser, protected by Google OAuth.
 
 ![DNS Switcher screenshot](screenshot.jpg)
 
@@ -22,11 +22,12 @@ git clone https://github.com/youfou/cf-dns-switcher.git
 cd cf-dns-switcher
 ```
 
-Edit `wrangler.toml` to set your domain and nodes:
+Edit `wrangler.toml` to set your domain, email, and nodes:
 
 ```toml
 [vars]
-DOMAIN      = "sub.example.com"
+DOMAIN       = "sub.example.com"
+GOOGLE_EMAIL = "you@gmail.com"
 
 NODE_NAME_1 = "Home Server"
 NODE_HOST_1 = "1.2.3.4"
@@ -37,35 +38,35 @@ NODE_HOST_2 = "5.6.7.8"
 
 ### 2. Set secrets
 
+These three values are sensitive and must never be stored in files:
+
 ```bash
-wrangler secret put GOOGLE_EMAIL          # e.g. you@gmail.com
 wrangler secret put GOOGLE_CLIENT_ID
 wrangler secret put GOOGLE_CLIENT_SECRET
 wrangler secret put CF_API_TOKEN
 ```
 
+See the [Google OAuth Setup](#google-oauth-setup) and [Cloudflare API Token](#cloudflare-api-token) sections below for how to obtain each value.
+
 ### 3. Deploy
 
 ```bash
-npx wrangler deploy
+wrangler deploy
 ```
 
-Then update your Google OAuth redirect URI to:
-```
-https://<your-worker>.workers.dev/auth/callback
-```
+After deploying, Wrangler prints your Worker URL (e.g. `https://cf-dns-switcher.<your-account>.workers.dev`). Go back to Google Cloud Console and add `https://<your-worker-url>/auth/callback` as an authorized redirect URI — see step 4 of [Google OAuth Setup](#google-oauth-setup).
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `DOMAIN` | ✅ | Domain whose DNS record is managed |
-| `GOOGLE_EMAIL` | ✅ | Google account email allowed to log in |
-| `GOOGLE_CLIENT_ID` | ✅ | Google OAuth 2.0 Client ID |
-| `GOOGLE_CLIENT_SECRET` | ✅ | Google OAuth 2.0 Client Secret |
-| `CF_API_TOKEN` | ✅ | Cloudflare API token with *Edit zone DNS* permission |
-| `NODE_NAME_n` | Optional | Display name for node *n* (n = 1, 2, …) |
-| `NODE_HOST_n` | Optional | IP address or hostname for node *n* |
+| Variable | Required | Set via | Description |
+|---|---|---|---|
+| `DOMAIN` | ✅ | `wrangler.toml` | Domain whose DNS record is managed |
+| `GOOGLE_EMAIL` | ✅ | `wrangler.toml` | Google account email allowed to log in |
+| `GOOGLE_CLIENT_ID` | ✅ | `wrangler secret put` | Google OAuth 2.0 Client ID |
+| `GOOGLE_CLIENT_SECRET` | ✅ | `wrangler secret put` | Google OAuth 2.0 Client Secret |
+| `CF_API_TOKEN` | ✅ | `wrangler secret put` | Cloudflare API token with *Edit zone DNS* permission |
+| `NODE_NAME_n` | Optional | `wrangler.toml` | Display name for node *n* (n = 1, 2, …) |
+| `NODE_HOST_n` | Optional | `wrangler.toml` | IP address or hostname for node *n* |
 
 Nodes are read from `NODE_NAME_1` / `NODE_HOST_1` upward, stopping at the first missing `NODE_NAME_n`. Only pairs where both name and host are defined are shown.
 
@@ -83,18 +84,32 @@ If an existing record's type needs to change, the old record is deleted and a ne
 
 ## Google OAuth Setup
 
+This worker uses Google OAuth to restrict access to a single trusted account. You need to create OAuth credentials in Google Cloud Console.
+
 1. Open [Google Cloud Console](https://console.cloud.google.com/) → create or select a project.
-2. Go to [APIs & Services → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) → set type to *External*, add your email as a test user.
-3. Go to [APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) → **Create Credentials** → **OAuth 2.0 Client ID** → *Web application*.
-4. Add `https://<your-worker>.workers.dev/auth/callback` as an authorized redirect URI.
-5. Copy the Client ID and Client Secret → set them as secrets with `wrangler secret put`.
+2. Go to [APIs & Services → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent) → set user type to *External* and fill in the required fields. Under **Test users**, add the Google account email you intend to use. (While the app is in Testing mode, only explicitly added test users can sign in — this is fine for a personal tool.)
+3. Go to [APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials) → **Create Credentials** → **OAuth 2.0 Client ID** → application type: *Web application*.
+4. Under **Authorized redirect URIs**, add your Worker's callback URL. You'll get the exact URL after running `wrangler deploy`; it looks like:
+   ```
+   https://cf-dns-switcher.<your-account>.workers.dev/auth/callback
+   ```
+   If you haven't deployed yet, you can save a placeholder and come back to update it after step 3 of Quick Start.
+5. Click **Create**. Copy the **Client ID** and **Client Secret**, then set them as secrets:
+   ```bash
+   wrangler secret put GOOGLE_CLIENT_ID
+   wrangler secret put GOOGLE_CLIENT_SECRET
+   ```
 
 ## Cloudflare API Token
 
 1. Open [Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens).
 2. Click **Create Token** → use the *Edit zone DNS* template.
-3. Restrict to the specific zone that contains your domain.
-4. Copy the token → `wrangler secret put CF_API_TOKEN`.
+3. Under **Zone Resources**, restrict to the specific zone that contains your domain.
+4. Click **Continue to summary** → **Create Token**. Copy the token — it is shown only once.
+5. Set it as a secret:
+   ```bash
+   wrangler secret put CF_API_TOKEN
+   ```
 
 ## Project Structure
 

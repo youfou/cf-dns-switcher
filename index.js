@@ -1320,13 +1320,14 @@ function renderHelp() {
   <!-- 3. Environment Variables -->
   <div class="section">
     <h2><span class="num">3</span> Environment Variables</h2>
-    <p>Configure these in your <code>wrangler.toml</code> (non-sensitive) or via <code>wrangler secret put</code> (sensitive).</p>
+    <p>Non-sensitive values go in the <code>[vars]</code> section of <code>wrangler.toml</code>. Sensitive values must be set via <code>wrangler secret put</code> in your terminal — never store them in files.</p>
     <div class="tbl-wrap">
       <table>
         <thead>
           <tr>
             <th>Variable</th>
             <th>Required</th>
+            <th>Set via</th>
             <th>Description</th>
             <th>Example</th>
           </tr>
@@ -1335,43 +1336,50 @@ function renderHelp() {
           <tr>
             <td><code>DOMAIN</code></td>
             <td><span class="badge-yes">Yes</span></td>
+            <td><code>wrangler.toml</code></td>
             <td>Domain to control DNS for</td>
             <td><code>sub.example.com</code></td>
           </tr>
           <tr>
             <td><code>GOOGLE_EMAIL</code></td>
             <td><span class="badge-yes">Yes</span></td>
-            <td>Allowed Google account email</td>
+            <td><code>wrangler.toml</code></td>
+            <td>Google account email allowed to log in</td>
             <td><code>user@gmail.com</code></td>
           </tr>
           <tr>
             <td><code>GOOGLE_CLIENT_ID</code></td>
             <td><span class="badge-yes">Yes</span></td>
+            <td><code>secret put</code></td>
             <td>Google OAuth 2.0 Client ID</td>
             <td><code>1234...apps.googleusercontent.com</code></td>
           </tr>
           <tr>
             <td><code>GOOGLE_CLIENT_SECRET</code></td>
             <td><span class="badge-yes">Yes</span></td>
+            <td><code>secret put</code></td>
             <td>Google OAuth 2.0 Client Secret</td>
             <td><code>GOCSPX-...</code></td>
           </tr>
           <tr>
             <td><code>CF_API_TOKEN</code></td>
             <td><span class="badge-yes">Yes</span></td>
-            <td>Cloudflare API Token with DNS Edit permission</td>
+            <td><code>secret put</code></td>
+            <td>Cloudflare API token with DNS Edit permission</td>
             <td><code>abc123...</code></td>
           </tr>
           <tr>
             <td><code>NODE_NAME_n</code></td>
             <td><span class="badge-opt">Optional</span></td>
+            <td><code>wrangler.toml</code></td>
             <td>Display name for node <em>n</em> (n = 1, 2, …)</td>
             <td><code>Home Server</code></td>
           </tr>
           <tr>
             <td><code>NODE_HOST_n</code></td>
             <td><span class="badge-opt">Optional</span></td>
-            <td>Hostname or IP address for node <em>n</em></td>
+            <td><code>wrangler.toml</code></td>
+            <td>IP address or hostname for node <em>n</em></td>
             <td><code>1.2.3.4</code></td>
           </tr>
         </tbody>
@@ -1385,20 +1393,19 @@ function renderHelp() {
     <ol class="steps">
       <li>Open <a href="https://console.cloud.google.com/" target="_blank" rel="noopener"><strong>Google Cloud Console</strong></a> → select or create a project.</li>
       <li>Navigate to <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noopener"><strong>APIs &amp; Services → OAuth consent screen</strong></a>.
-          Set user type to <em>External</em>, fill in app name, and add your email as a test user.</li>
+          Set user type to <em>External</em> and fill in the required fields. Under <strong>Test users</strong>, add the Google account email you intend to use — while the app is in Testing mode, only explicitly listed addresses can sign in.</li>
       <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener"><strong>APIs &amp; Services → Credentials</strong></a>.</li>
       <li>Click <strong>Create Credentials</strong> → <strong>OAuth 2.0 Client ID</strong>.</li>
       <li>Choose <strong>Web application</strong> as the application type.</li>
-      <li>Under <strong>Authorized redirect URIs</strong>, add:
+      <li>Under <strong>Authorized redirect URIs</strong>, add your Worker's callback URL:
           <pre>https://YOUR_WORKER_DOMAIN/auth/callback</pre>
-          Replace <code>YOUR_WORKER_DOMAIN</code> with your actual Worker hostname.
+          You will get the exact URL after running <code>wrangler deploy</code>. If you haven't deployed yet, save a placeholder here and come back to update it afterwards.
       </li>
-      <li>Click <strong>Create</strong>. Copy the <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
+      <li>Click <strong>Create</strong>. Copy the <strong>Client ID</strong> and <strong>Client Secret</strong>, then set them as secrets:
+          <pre>wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET</pre>
+      </li>
     </ol>
-    <div class="note">
-      <strong>Note:</strong> While the OAuth app is in "Testing" mode, only added test users can sign in.
-      That is perfectly fine for a single-user tool like this.
-    </div>
   </div>
 
   <!-- 5. Cloudflare API Token -->
