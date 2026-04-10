@@ -539,6 +539,7 @@ function renderMain(env, session) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DNS Switcher — ${domainEsc}</title>
+<link rel="icon" href="https://em-content.zobj.net/source/apple/453/high-voltage_26a1.png" type="image/png">
 <style>
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
@@ -1145,6 +1146,7 @@ function renderHelp() {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Help &amp; Setup — DNS Switcher</title>
+<link rel="icon" href="https://em-content.zobj.net/source/apple/453/high-voltage_26a1.png" type="image/png">
 <style>
   *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
