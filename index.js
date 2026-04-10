@@ -527,7 +527,7 @@ function renderMain(env, session) {
       <span class="node-radio" id="radio-${i}"></span>
       <div class="node-info">
         <span class="node-name">${esc(node.name)}</span>
-        <span class="node-host">${esc(node.host)}</span>
+        <span class="node-host" title="Click to copy" onclick="event.stopPropagation(); copyText(NODES[${i}].host, this)">${esc(node.host)}</span>
       </div>
     </div>`,
     )
@@ -586,7 +586,10 @@ function renderMain(env, session) {
     overflow:hidden;
     text-overflow:ellipsis;
     max-width:220px;
+    cursor:pointer;
+    transition:color .15s, border-color .15s;
   }
+  .domain-badge:hover { color:var(--text); border-color:#4b5a70; }
 
   /* Status bar */
   .status-bar {
@@ -624,7 +627,10 @@ function renderMain(env, session) {
     padding:.15rem .45rem;
     border-radius:.3rem;
     margin-left:.25rem;
+    cursor:pointer;
+    transition:opacity .15s;
   }
+  .status-host:hover { opacity:.7; }
 
   /* Section label */
   .section-label {
@@ -700,7 +706,8 @@ function renderMain(env, session) {
   .node-card.pending .node-name  { color:var(--pending); }
 
   .node-host {
-    display:block;
+    display:inline-block;
+    max-width:100%;
     font-family:'SF Mono','Fira Code',monospace;
     font-size:.75rem;
     color:var(--muted);
@@ -708,7 +715,10 @@ function renderMain(env, session) {
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    cursor:pointer;
+    transition:color .15s;
   }
+  .node-host:hover { color:var(--text); text-decoration:underline dotted; text-underline-offset:2px; }
 
   /* Custom card */
   .custom-card {
@@ -817,13 +827,16 @@ function renderMain(env, session) {
   /* Footer */
   .footer {
     display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:.5rem;
+    flex-direction:column;
+    gap:1rem;
     margin-top:1.75rem;
     padding-top:1.25rem;
     border-top:1px solid var(--border);
+  }
+  .footer-top {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
   }
   .footer-left {
     font-size:.8rem;
@@ -831,17 +844,16 @@ function renderMain(env, session) {
     display:flex;
     align-items:center;
     gap:.35rem;
-    flex-wrap:wrap;
   }
   .footer-email {
     font-family:'SF Mono','Fira Code',monospace;
     font-size:.75rem;
     color:var(--text);
   }
-  .footer-right {
+  .footer-links {
     display:flex;
     align-items:center;
-    gap:.5rem;
+    justify-content:space-between;
   }
   .btn-signout {
     background:transparent;
@@ -875,7 +887,7 @@ function renderMain(env, session) {
   <div class="header">
     <div class="header-top">
       <span class="title">DNS Switcher</span>
-      <span class="domain-badge" title="${domainEsc}">${domainEsc}</span>
+      <span class="domain-badge" title="Click to copy" onclick="copyText('${domainEsc}', this)">${domainEsc}</span>
     </div>
     <div class="status-bar loading" id="status-bar">
       <div class="status-dot"></div>
@@ -915,14 +927,17 @@ ${nodeCards}
 
   <!-- Footer -->
   <div class="footer">
-    <div class="footer-left">
-      Signed in as <span class="footer-email">${emailEsc}</span>
-    </div>
-    <div class="footer-right">
-      <a href="/help" class="help-link">Help &amp; Setup</a>
+    <div class="footer-top">
+      <div class="footer-left">
+        Signed in as <span class="footer-email">${emailEsc}</span>
+      </div>
       <form action="/auth/logout" method="get" style="display:inline">
         <button type="submit" class="btn-signout">Sign out</button>
       </form>
+    </div>
+    <div class="footer-links">
+      <a href="/help" class="help-link">Help &amp; Setup</a>
+      <a href="https://github.com/youfou/cf-dns-switcher" class="help-link" target="_blank" rel="noopener">GitHub &#8599;</a>
     </div>
   </div>
 
@@ -942,7 +957,7 @@ async function loadDNS() {
       const type = data.record.type;
       setStatus('ok', 'Current record \u2014 ' + type + ':');
       document.getElementById('status-text').innerHTML =
-        'Current record &mdash; ' + esc(type) + ': <span class="status-host">' + esc(curHost) + '</span>';
+        'Current record &mdash; ' + esc(type) + ': <span class="status-host" title="Click to copy" onclick="copyText(curHost, this)">' + esc(curHost) + '</span>';
       highlight(curHost);
     } else {
       setStatus('ok', 'No DNS record found');
@@ -1011,7 +1026,7 @@ async function pick(i) {
       card.classList.add('active');
       setStatus('ok', 'Switched \u2014 ' + data.record.type + ':');
       document.getElementById('status-text').innerHTML =
-        'Switched &mdash; ' + esc(data.record.type) + ': <span class="status-host">' + esc(host) + '</span>';
+        'Switched &mdash; ' + esc(data.record.type) + ': <span class="status-host" title="Click to copy" onclick="copyText(curHost, this)">' + esc(host) + '</span>';
     } else {
       card.classList.remove('pending');
       showErr(data.error || 'Failed to switch DNS');
@@ -1054,7 +1069,7 @@ async function submitCustom() {
       if (cc) { cc.classList.remove('pending'); cc.classList.add('active','open'); }
       setStatus('ok', 'Switched \u2014 ' + data.record.type + ':');
       document.getElementById('status-text').innerHTML =
-        'Switched &mdash; ' + esc(data.record.type) + ': <span class="status-host">' + esc(host) + '</span>';
+        'Switched &mdash; ' + esc(data.record.type) + ': <span class="status-host" title="Click to copy" onclick="copyText(curHost, this)">' + esc(host) + '</span>';
     } else {
       if (cc) cc.classList.remove('pending');
       showErr(data.error || 'Failed to switch DNS');
@@ -1067,6 +1082,30 @@ async function submitCustom() {
     highlight(curHost);
     setStatus('err', 'Switch failed');
   }
+}
+
+async function copyText(text, el) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch { return; }
+  }
+  if (!el) return;
+  const orig = el.textContent;
+  el.textContent = 'Copied!';
+  el.style.color = 'var(--success)';
+  setTimeout(() => {
+    el.textContent = orig;
+    el.style.color = '';
+  }, 1200);
 }
 
 function showErr(msg) {
@@ -1130,6 +1169,12 @@ function renderHelp() {
   .container { max-width:720px; margin:0 auto; }
 
   /* Breadcrumb / back */
+  .help-topbar {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:2rem;
+  }
   .back-link {
     display:inline-flex;
     align-items:center;
@@ -1137,7 +1182,6 @@ function renderHelp() {
     color:var(--muted);
     text-decoration:none;
     font-size:.8125rem;
-    margin-bottom:2rem;
     transition:color .15s;
   }
   .back-link:hover { color:var(--accent); }
@@ -1265,13 +1309,16 @@ function renderHelp() {
 
   /* Footer */
   .help-footer {
+    display:flex;
+    align-items:center;
     margin-top:3rem;
     padding-top:1.5rem;
     border-top:1px solid var(--border);
-    text-align:center;
-    color:#475569;
     font-size:.8rem;
   }
+  .help-footer > * { flex:1; }
+  .help-footer-center { text-align:center; color:#475569; }
+  .help-footer > a:last-child { display:block; text-align:right; }
   a { color:var(--accent); text-decoration:none; }
   a:hover { text-decoration:underline; }
   .steps a { font-weight:500; }
@@ -1282,7 +1329,10 @@ function renderHelp() {
 <body>
 <div class="container">
 
-  <a href="/" class="back-link">&#8592; Back to Dashboard</a>
+  <div class="help-topbar">
+    <a href="/" class="back-link">&#8592; Back to Dashboard</a>
+    <a href="https://github.com/youfou/cf-dns-switcher" class="back-link" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </div>
 
   <div class="page-header">
     <h1 class="page-title">Help &amp; Setup</h1>
@@ -1505,7 +1555,9 @@ NODE_HOST_4    = "cdn.example.com"</pre>
   </div>
 
   <div class="help-footer">
-    DNS Switcher &mdash; <a href="/">Back to Dashboard</a>
+    <a href="/" class="back-link">&#8592; Back to Dashboard</a>
+    <span class="help-footer-center">DNS Switcher</span>
+    <a href="https://github.com/youfou/cf-dns-switcher" class="back-link" target="_blank" rel="noopener">GitHub &#8599;</a>
   </div>
 
 </div>
