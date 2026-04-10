@@ -1,0 +1,61 @@
+# CF DNS Switcher — Wrangler Configuration
+# https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "cf-dns-switcher"
+main = "index.js"
+compatibility_date = "2024-09-23"
+
+# ─── Non-sensitive variables ──────────────────────────────────────────────────
+# Set these directly here. Sensitive values (marked below) must be set via:
+#   wrangler secret put <VARIABLE_NAME>
+
+[vars]
+# The domain whose DNS record will be managed.
+# Can be a root domain (example.com) or subdomain (sub.example.com).
+DOMAIN = "sub.example.com"
+
+# ── Node definitions ──────────────────────────────────────────────────────────
+# Define as many nodes as you need. Numbering must start at 1 and be
+# consecutive — enumeration stops at the first missing NODE_NAME_n.
+#
+# NODE_HOST_n accepts:
+#   - IPv4 address  →  creates an A record      (e.g. "1.2.3.4")
+#   - IPv6 address  →  creates an AAAA record   (e.g. "2001:db8::1")
+#   - Hostname      →  creates a CNAME record   (e.g. "node1.example.com")
+
+NODE_NAME_1 = "Home Server"
+NODE_HOST_1 = "1.2.3.4"
+
+NODE_NAME_2 = "VPS Tokyo"
+NODE_HOST_2 = "5.6.7.8"
+
+# NODE_NAME_3 = "VPS Frankfurt"
+# NODE_HOST_3 = "node3.example.com"
+
+# ─── Sensitive secrets (DO NOT put values here) ───────────────────────────────
+# Run the following commands to set each secret:
+#
+#   wrangler secret put GOOGLE_EMAIL
+#   wrangler secret put GOOGLE_CLIENT_ID
+#   wrangler secret put GOOGLE_CLIENT_SECRET
+#   wrangler secret put CF_API_TOKEN
+#
+# GOOGLE_EMAIL         — the Google account email permitted to log in
+# GOOGLE_CLIENT_ID     — OAuth 2.0 Client ID from Google Cloud Console
+# GOOGLE_CLIENT_SECRET — OAuth 2.0 Client Secret from Google Cloud Console
+# CF_API_TOKEN         — Cloudflare API token with "Edit zone DNS" permission
+
+# ─── Optional: custom worker domain ──────────────────────────────────────────
+# Uncomment and fill in to publish on a custom route instead of
+# the default *.workers.dev subdomain.
+#
+# routes = [
+#   { pattern = "dns-switcher.example.com", custom_domain = true }
+# ]
+
+# ─── Optional: environment overrides ─────────────────────────────────────────
+# You can define separate [env.staging] / [env.production] blocks to
+# maintain multiple deployments with different domains or node lists.
+#
+# [env.production]
+# vars = { DOMAIN = "prod.example.com", NODE_NAME_1 = "Primary", NODE_HOST_1 = "1.1.1.1" }
